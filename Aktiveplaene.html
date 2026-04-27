@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>Aktive Pläne – MyFit App</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0f0e0d;--surface:#1a1917;--surface2:#252320;--border:#2e2c29;--accent:#e8a045;--acc2:#c97b25;--text:#f0ece6;--muted:#8a8680;--r:14px}
+    html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;-webkit-font-smoothing:antialiased}
+    #app{max-width:480px;margin:0 auto;min-height:100%;display:flex;flex-direction:column}
+
+    .topbar{padding:52px 22px 0;display:flex;align-items:flex-start;gap:14px;flex-shrink:0}
+    .back-btn{width:40px;height:40px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface);color:var(--muted);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;transition:border-color .2s}
+    .back-btn:hover{border-color:var(--muted)}
+    .topbar-tag{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-family:'Syne',sans-serif;font-weight:600;margin-bottom:4px}
+    .topbar-title{font-family:'Syne',sans-serif;font-weight:800;font-size:26px;line-height:1.1}
+
+    .scroll{flex:1;padding:16px 22px 80px}
+
+    /* Empty state */
+    .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;gap:12px}
+    .empty-ico{font-size:56px}
+    .empty h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:700}
+    .empty p{color:var(--muted);font-size:14px;line-height:1.6;max-width:260px}
+    .btn-goto{display:inline-block;background:var(--accent);color:var(--bg);border:none;border-radius:12px;padding:14px 28px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-decoration:none;margin-top:8px;transition:background .2s}
+    .btn-goto:hover{background:#f0ae55}
+
+    /* Plan card */
+    .plan-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:14px;overflow:hidden;animation:fadeUp .4s ease both}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+    .plan-card-hd{padding:16px 18px;cursor:pointer;transition:background .2s}
+    .plan-card-hd:hover{background:var(--surface2)}
+    .plan-hd-row{display:flex;align-items:flex-start;gap:12px}
+    .plan-ico-box{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,rgba(232,160,69,.2),rgba(201,123,37,.1));border:1px solid rgba(232,160,69,.3);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+    .plan-meta{flex:1}
+    .plan-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;line-height:1.2;margin-bottom:6px}
+    .plan-chips{display:flex;flex-wrap:wrap;gap:5px}
+    .pchip{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;font-weight:500;color:var(--muted);white-space:nowrap}
+    .pchip.gold{background:rgba(232,160,69,.1);border-color:rgba(232,160,69,.3);color:var(--accent)}
+    .plan-date{font-size:11px;color:var(--muted);margin-top:8px}
+    .plan-chevron{color:var(--muted);font-size:14px;transition:transform .3s;flex-shrink:0;margin-top:4px}
+    .plan-card.open .plan-chevron{transform:rotate(180deg)}
+
+    .plan-card-body{display:none;border-top:1px solid var(--border)}
+    .plan-card.open .plan-card-body{display:block}
+
+    /* Phase nav inside */
+    .phase-scroll{display:flex;gap:6px;overflow-x:auto;padding:12px 18px 8px;scrollbar-width:none}
+    .phase-scroll::-webkit-scrollbar{display:none}
+    .ph-tab{flex-shrink:0;background:var(--surface2);border:1.5px solid var(--border);border-radius:20px;padding:5px 12px;font-family:'Syne',sans-serif;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .2s}
+    .ph-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(232,160,69,.1)}
+
+    .phase-block{display:none;padding:0 18px 16px}
+    .phase-block.active{display:block}
+
+    .day-row{padding:11px 0;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px}
+    .day-row:last-child{border-bottom:none}
+    .day-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:6px}
+    .day-dot.rest{background:var(--border)}
+    .day-label{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--muted);width:28px;flex-shrink:0;margin-top:2px}
+    .day-session{font-size:13px;color:var(--text)}
+    .day-session.rest-day{color:var(--muted);font-style:italic}
+    .day-excount{font-size:11px;color:var(--muted);margin-top:2px}
+
+    /* Action row */
+    .plan-actions{display:flex;gap:8px;padding:12px 18px 16px;border-top:1px solid var(--border)}
+    .btn-del{flex:1;background:rgba(217,96,96,.1);border:1.5px solid rgba(217,96,96,.3);color:#d96060;border-radius:10px;padding:11px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s}
+    .btn-del:hover{background:rgba(217,96,96,.2)}
+    .btn-planer{flex:2;background:var(--accent);color:var(--bg);border:none;border-radius:10px;padding:11px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:background .2s}
+    .btn-planer:hover{background:#f0ae55}
+
+    /* Delete confirm modal */
+    .del-modal{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);z-index:100;display:none;align-items:flex-end;justify-content:center}
+    .del-modal.open{display:flex}
+    .del-box{background:var(--surface);border:1px solid var(--border);border-radius:22px 22px 0 0;width:100%;max-width:480px;padding:28px 24px 44px;text-align:center;transform:translateY(100%);transition:transform .35s cubic-bezier(.22,.68,0,1.2)}
+    .del-modal.open .del-box{transform:translateY(0)}
+    .del-drag{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 24px}
+    .del-icon{font-size:44px;margin-bottom:14px;display:block}
+    .del-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px}
+    .del-sub{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:24px}
+    .del-confirm-row{display:flex;gap:10px}
+    .btn-cancel{flex:1;background:var(--surface2);border:1.5px solid var(--border);color:var(--muted);border-radius:12px;padding:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s}
+    .btn-confirm-del{flex:1;background:#d96060;color:#fff;border:none;border-radius:12px;padding:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:background .2s}
+    .btn-confirm-del:hover{background:#c05050}
+
+    #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);background:#242220;border:1px solid var(--border);color:var(--text);padding:9px 18px;border-radius:50px;font-size:13px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;z-index:200;white-space:nowrap}
+    #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <button class="back-btn" onclick="window.location.href='Main.html'">←</button>
+    <div>
+      <div class="topbar-tag">Meine Trainingspläne</div>
+      <div class="topbar-title">Aktive Pläne</div>
+    </div>
+  </div>
+
+  <div class="scroll" id="scroll-content"></div>
+</div>
+
+<!-- Delete confirm modal -->
+<div class="del-modal" id="del-modal">
+  <div class="del-box">
+    <div class="del-drag"></div>
+    <span class="del-icon">⚠️</span>
+    <div class="del-title" id="del-modal-step">Plan löschen?</div>
+    <div class="del-sub"  id="del-modal-sub">Dieser Plan wird unwiderruflich gelöscht. Du kannst ihn nicht wiederherstellen.</div>
+    <div class="del-confirm-row">
+      <button class="btn-cancel" onclick="closeDelModal()">Abbrechen</button>
+      <button class="btn-confirm-del" id="del-confirm-btn" onclick="confirmDelete()">Löschen</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const PLANS_KEY='myapp_plans';
+const DAYS_FULL={Mo:'Mo',Di:'Di',Mi:'Mi',Do:'Do',Fr:'Fr',Sa:'Sa',So:'So'};
+const ALL_DAYS=['Mo','Di','Mi','Do','Fr','Sa','So'];
+
+function loadPlans(){try{return JSON.parse(localStorage.getItem(PLANS_KEY))||[]}catch{return[]}}
+function savePlans(p){localStorage.setItem(PLANS_KEY,JSON.stringify(p))}
+
+let pendingDeleteId=null, deleteStep=0;
+
+function render(){
+  const plans=loadPlans();
+  const cont=document.getElementById('scroll-content');
+
+  if(plans.length===0){
+    cont.innerHTML=`<div class="empty"><div class="empty-ico">🗂️</div><h2>Noch keine Pläne</h2><p>Erstelle deinen ersten personalisierten Trainingsplan mit unserem KI-Assistenten.</p><a class="btn-goto" href="Trainingsplaner.html">📋 Plan erstellen</a></div>`;
+    return;
+  }
+
+  cont.innerHTML=plans.map((plan,idx)=>renderPlanCard(plan,idx)).join('');
+}
+
+function renderPlanCard(plan,idx){
+  const created=plan.createdAt?new Date(plan.createdAt).toLocaleDateString('de-DE'):'Unbekannt';
+  const phases=plan.phases||[];
+
+  return `<div class="plan-card" id="pc-${idx}">
+    <div class="plan-card-hd" onclick="togglePlan(${idx})">
+      <div class="plan-hd-row">
+        <div class="plan-ico-box">📋</div>
+        <div class="plan-meta">
+          <div class="plan-name">${plan.name||'Trainingsplan'}</div>
+          <div class="plan-chips">
+            <span class="pchip gold">${plan.focus||'—'}</span>
+            <span class="pchip">${plan.weeks||'?'} Wochen</span>
+            <span class="pchip">${plan.daysPerWeek||'?'}× / Woche</span>
+            <span class="pchip">${plan.sessionTime||60} Min</span>
+            <span class="pchip gold">${plan.level||'—'}</span>
+          </div>
+          <div class="plan-date">Erstellt am ${created}</div>
+        </div>
+        <span class="plan-chevron">▼</span>
+      </div>
+    </div>
+    <div class="plan-card-body">
+      ${phases.length>0?`
+      <div class="phase-scroll" id="phase-scroll-${idx}">
+        ${phases.map((p,pi)=>`<div class="ph-tab ${pi===0?'active':''}" onclick="switchPhase(${idx},${pi})">${p.name}</div>`).join('')}
+      </div>
+      ${phases.map((p,pi)=>`
+        <div class="phase-block ${pi===0?'active':''}" id="pb-${idx}-${pi}">
+          <div style="background:rgba(232,160,69,.07);border:1px solid rgba(232,160,69,.15);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--muted)">
+            <b style="color:var(--accent)">${p.name}</b> · ${p.weekRange} · ${p.desc||''}
+          </div>
+          ${renderWeekSummary(p,idx)}
+        </div>`).join('')}
+      `:'<div style="padding:16px 18px;color:var(--muted);font-size:13px">Keine Phasen-Details verfügbar.</div>'}
+      <div class="plan-actions">
+        <button class="btn-del" onclick="startDelete(${idx})">🗑 Löschen</button>
+        <button class="btn-planer" onclick="window.location.href='Trainingsplaner.html'">+ Neuen Plan erstellen</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderWeekSummary(phase,planIdx){
+  if(!phase.schedule)return'<div style="padding:8px 0;color:var(--muted);font-size:13px">Wochenplan nicht verfügbar.</div>';
+  return ALL_DAYS.map(day=>{
+    const s=phase.schedule[day];
+    if(!s)return'';
+    const isRest=!s.exercises;
+    const exCount=isRest?0:s.exercises.length;
+    return `<div class="day-row">
+      <div class="day-dot ${isRest?'rest':''}"></div>
+      <div class="day-label">${day}</div>
+      <div>
+        <div class="day-session ${isRest?'rest-day':''}">${isRest?'Ruhetag':s.sessionName||'Training'}</div>
+        ${!isRest?`<div class="day-excount">${exCount} Übungen · Warmup + Cooldown</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function togglePlan(idx){
+  document.getElementById('pc-'+idx).classList.toggle('open');
+}
+
+function switchPhase(planIdx, phaseIdx){
+  const plan=loadPlans()[planIdx];
+  const numPhases=plan.phases.length;
+  for(let i=0;i<numPhases;i++){
+    document.getElementById(`pb-${planIdx}-${i}`).classList.toggle('active',i===phaseIdx);
+    document.querySelectorAll(`#phase-scroll-${planIdx} .ph-tab`)[i].classList.toggle('active',i===phaseIdx);
+  }
+}
+
+/* ── DELETE WITH DOUBLE CONFIRM ───────────── */
+function startDelete(idx){
+  pendingDeleteId=idx;deleteStep=1;
+  const plans=loadPlans();
+  const name=plans[idx]?.name||'Trainingsplan';
+  document.getElementById('del-modal-step').textContent='Plan wirklich löschen?';
+  document.getElementById('del-modal-sub').textContent=`"${name}" wird unwiderruflich gelöscht. Bist du sicher?`;
+  document.getElementById('del-confirm-btn').textContent='Ja, löschen';
+  document.getElementById('del-modal').classList.add('open');
+}
+function confirmDelete(){
+  if(deleteStep===1){
+    deleteStep=2;
+    document.getElementById('del-modal-step').textContent='Letzte Bestätigung!';
+    document.getElementById('del-modal-sub').innerHTML='<b style="color:#d96060">Diese Aktion kann nicht rückgängig gemacht werden.</b><br>Plan endgültig löschen?';
+    document.getElementById('del-confirm-btn').textContent='🗑 Endgültig löschen';
+  }else{
+    const plans=loadPlans();
+    plans.splice(pendingDeleteId,1);
+    savePlans(plans);
+    closeDelModal();
+    toast('🗑 Plan gelöscht');
+    setTimeout(render,300);
+  }
+}
+function closeDelModal(){
+  document.getElementById('del-modal').classList.remove('open');
+  pendingDeleteId=null;deleteStep=0;
+}
+document.getElementById('del-modal').addEventListener('click',e=>{if(e.target===document.getElementById('del-modal'))closeDelModal()});
+
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
+
+render();
+</script>
+</body>
+</html>

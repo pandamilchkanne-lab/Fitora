@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My App</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f0e0d;
+      --surface:   #1a1917;
+      --surface2:  #252320;
+      --border:    #2e2c29;
+      --accent:    #e8a045;
+      --accent2:   #c97b25;
+      --text:      #f0ece6;
+      --muted:     #8a8680;
+      --danger:    #d96060;
+      --nav-h:     72px;
+      --radius:    16px;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+
+    /* ── APP SHELL ─────────────────────────────────── */
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    /* ── PAGES ─────────────────────────────────────── */
+    .page {
+      flex: 1;
+      overflow-y: auto;
+      display: none;
+      flex-direction: column;
+      padding: 0 0 calc(var(--nav-h) + 16px);
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .page.active { display: flex; }
+
+    /* ── PAGE HEADER ───────────────────────────────── */
+    .page-header {
+      padding: 52px 24px 24px;
+      position: sticky;
+      top: 0;
+      background: linear-gradient(to bottom, var(--bg) 70%, transparent);
+      z-index: 10;
+    }
+    .page-header .label {
+      font-size: 11px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .page-header h1 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 28px;
+      line-height: 1.1;
+    }
+
+    /* ── AVATAR BLOCK ──────────────────────────────── */
+    .avatar-block {
+      margin: 0 24px 28px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      animation: fadeUp .5s ease both;
+    }
+    .avatar-ring {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--bg);
+      flex-shrink: 0;
+      box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--accent);
+      transition: box-shadow .3s;
+    }
+    .avatar-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .avatar-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    /* ── CARD ──────────────────────────────────────── */
+    .card {
+      margin: 0 24px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      animation: fadeUp .5s ease both;
+    }
+    .card:nth-child(2) { animation-delay: .07s; }
+    .card:nth-child(3) { animation-delay: .14s; }
+    .card:nth-child(4) { animation-delay: .21s; }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .card-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .edit-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 5px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background .2s, border-color .2s;
+    }
+    .edit-btn:hover { background: var(--border); border-color: var(--accent); }
+
+    /* ── INFO ROWS ─────────────────────────────────── */
+    .info-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      transition: background .15s;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-row:hover { background: var(--surface2); }
+    .info-icon {
+      width: 34px;
+      height: 34px;
+      background: var(--surface2);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .info-label {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+    .info-value {
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--text);
+      word-break: break-word;
+    }
+    .info-value.placeholder { color: var(--border); font-style: italic; }
+
+    /* ── MODAL ─────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.7);
+      backdrop-filter: blur(6px);
+      z-index: 100;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px 24px 0 0;
+      width: 100%;
+      max-width: 480px;
+      padding: 28px 24px 40px;
+      transform: translateY(100%);
+      transition: transform .35s cubic-bezier(.22,.68,0,1.2);
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+    .modal-drag {
+      width: 40px; height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 0 auto 24px;
+    }
+    .modal h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    /* ── FORM ──────────────────────────────────────── */
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block;
+      font-size: 11px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 7px;
+      font-weight: 500;
+    }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      padding: 12px 14px;
+      outline: none;
+      transition: border-color .2s;
+      appearance: none;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus { border-color: var(--accent); }
+    .form-group textarea { resize: none; height: 80px; line-height: 1.5; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .btn-primary {
+      width: 100%;
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      border-radius: 12px;
+      padding: 15px;
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background .2s, transform .1s;
+    }
+    .btn-primary:hover { background: #f0ae55; }
+    .btn-primary:active { transform: scale(.98); }
+
+    /* ── PLACEHOLDER PAGES ─────────────────────────── */
+    .placeholder-page {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding-bottom: var(--nav-h);
+    }
+    .placeholder-icon {
+      font-size: 48px;
+      margin-bottom: 8px;
+    }
+    .placeholder-page h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+    }
+    .placeholder-page p { color: var(--muted); font-size: 14px; }
+
+    /* ── BOTTOM NAV ────────────────────────────────── */
+    nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      height: var(--nav-h);
+      background: rgba(26,25,23,.92);
+      backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: stretch;
+      z-index: 50;
+    }
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      transition: color .2s;
+      padding-bottom: 4px;
+      position: relative;
+    }
+    .nav-item.active { color: var(--accent); }
+    .nav-item .nav-icon {
+      font-size: 22px;
+      transition: transform .2s cubic-bezier(.34,1.56,.64,1);
+    }
+    .nav-item.active .nav-icon { transform: scale(1.18); }
+    .nav-item .nav-label {
+      font-size: 10px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      letter-spacing: .04em;
+    }
+    .nav-item::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 0; height: 2px;
+      background: var(--accent);
+      border-radius: 0 0 2px 2px;
+      transition: width .25s ease;
+    }
+    .nav-item.active::after { width: 28px; }
+
+    /* ── ANIMATIONS ────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── TOAST ─────────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: calc(var(--nav-h) + 16px);
+      left: 50%; transform: translateX(-50%) translateY(20px);
+      background: #2a2a27;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 20px;
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s, transform .3s;
+      z-index: 200;
+      white-space: nowrap;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── SCROLLBAR ─────────────────────────────────── */
+    .page::-webkit-scrollbar { width: 4px; }
+    .page::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ══ PAGE: ABOUT ME ══════════════════════════════ -->
+  <section class="page active" id="page-about">
+    <div class="page-header">
+      <div class="label">Mein Profil</div>
+      <h1>Über mich</h1>
+    </div>
+
+    <!-- Avatar -->
+    <div class="avatar-block">
+      <div class="avatar-ring" id="avatarInitials">?</div>
+      <div>
+        <div class="avatar-name" id="avatarName">Dein Name</div>
+        <div class="avatar-sub" id="avatarJob">Keine Angabe</div>
+      </div>
+    </div>
+
+    <!-- Personal Info Card -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Persönliche Daten</span>
+        <button class="edit-btn" onclick="openModal('personal')">✎ Bearbeiten</button>
+      </div>
+      <div class="info-row">
+        <div class="info-icon">👤</div>
+        <div>
+          <div class="info-label">Vollständiger Name</div>
+          <div class="info-value" id="d-name">—</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <div class="info-icon">🎂</div>
+        <div>
+          <div class="info-label">Geburtsdatum</div>
+          <div class="info-value" id="d-birth">—</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <div class="info-icon">📍</div>
+        <div>
+          <div class="info-label">Wohnort</div>
+          <div class="info-value" id="d-location">—</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <div class="info-icon">🏳️</div>
+        <div>
+          <div class="info-label">Nationalität</div>
+          <div class="info-value" id="d-nationality">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Card -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Kontakt</span>
+        <button class="edit-btn" onclick="openModal('contact')">✎ Bearbeiten</button>
+      </div>
+      <div class="info-row">
+        <div class="info-icon">📧</div>
+        <div>
+          <div class="info-label">E-Mail</div>
+          <div class="info-value" id="d-email">—</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <div class="info-icon">📱</div>
+        <div>
+          <div class="info-label">Telefon</div>
+          <div class="info-value" id="d-phone">—</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <div class="info-icon">🌐</div>
+        <div>
+          <div class="info-label">Website</div>
+          <div class="info-value" id="d-website">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bio Card -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Über mich</span>
+        <button class="edit-btn" onclick="openModal('bio')">✎ Bearbeiten</button>
+      </div>
+      <div class="info-row">
+        <div class="info-icon">💼</div>
+        <div>
+          <div class="info-label">Beruf / Tätigkeit</div>
+          <div class="info-value" id="d-job">—</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <div class="info-icon">📝</div>
+        <div>
+          <div class="info-label">Biografie</div>
+          <div class="info-value" id="d-bio" style="line-height:1.6">—</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <div class="info-icon">🎯</div>
+        <div>
+          <div class="info-label">Interessen</div>
+          <div class="info-value" id="d-interests">—</div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ══ PAGE: HOME ════════════════════════════════════ -->
+  <section class="page" id="page-home">
+    <div class="page-header">
+      <div class="label">Willkommen</div>
+      <h1>Home</h1>
+    </div>
+    <div class="placeholder-page">
+      <div class="placeholder-icon">🏠</div>
+      <h2>Home</h2>
+      <p>Dein Startbereich – noch leer.</p>
+    </div>
+  </section>
+
+  <!-- ══ PAGE: GALLERY ════════════════════════════════ -->
+  <section class="page" id="page-gallery">
+    <div class="page-header">
+      <div class="label">Galerie</div>
+      <h1>Fotos</h1>
+    </div>
+    <div class="placeholder-page">
+      <div class="placeholder-icon">🖼️</div>
+      <h2>Galerie</h2>
+      <p>Hier kommen deine Fotos hin.</p>
+    </div>
+  </section>
+
+  <!-- ══ PAGE: SETTINGS ═══════════════════════════════ -->
+  <section class="page" id="page-settings">
+    <div class="page-header">
+      <div class="label">Konfiguration</div>
+      <h1>Einstellungen</h1>
+    </div>
+    <div class="placeholder-page">
+      <div class="placeholder-icon">⚙️</div>
+      <h2>Einstellungen</h2>
+      <p>Hier kommen App-Einstellungen hin.</p>
+    </div>
+  </section>
+
+  <!-- ══ BOTTOM NAV ════════════════════════════════════ -->
+  <nav>
+    <button class="nav-item" onclick="showPage('home')" id="nav-home">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Home</span>
+    </button>
+    <button class="nav-item active" onclick="showPage('about')" id="nav-about">
+      <span class="nav-icon">👤</span>
+      <span class="nav-label">Profil</span>
+    </button>
+    <button class="nav-item" onclick="showPage('gallery')" id="nav-gallery">
+      <span class="nav-icon">🖼️</span>
+      <span class="nav-label">Galerie</span>
+    </button>
+    <button class="nav-item" onclick="showPage('settings')" id="nav-settings">
+      <span class="nav-icon">⚙️</span>
+      <span class="nav-label">Einstellungen</span>
+    </button>
+  </nav>
+
+</div><!-- #app -->
+
+<!-- ══ MODAL: PERSONAL ════════════════════════════════ -->
+<div class="modal-overlay" id="modal-personal">
+  <div class="modal">
+    <div class="modal-drag"></div>
+    <h2>Persönliche Daten</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Vorname</label>
+        <input id="f-firstname" type="text" placeholder="Max" />
+      </div>
+      <div class="form-group">
+        <label>Nachname</label>
+        <input id="f-lastname" type="text" placeholder="Mustermann" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Geburtsdatum</label>
+      <input id="f-birth" type="date" />
+    </div>
+    <div class="form-group">
+      <label>Wohnort</label>
+      <input id="f-location" type="text" placeholder="München, Bayern" />
+    </div>
+    <div class="form-group">
+      <label>Nationalität</label>
+      <input id="f-nationality" type="text" placeholder="Deutsch" />
+    </div>
+    <button class="btn-primary" onclick="saveSection('personal')">Speichern</button>
+  </div>
+</div>
+
+<!-- ══ MODAL: CONTACT ════════════════════════════════ -->
+<div class="modal-overlay" id="modal-contact">
+  <div class="modal">
+    <div class="modal-drag"></div>
+    <h2>Kontakt</h2>
+    <div class="form-group">
+      <label>E-Mail</label>
+      <input id="f-email" type="email" placeholder="max@beispiel.de" />
+    </div>
+    <div class="form-group">
+      <label>Telefon</label>
+      <input id="f-phone" type="tel" placeholder="+49 170 1234567" />
+    </div>
+    <div class="form-group">
+      <label>Website</label>
+      <input id="f-website" type="url" placeholder="https://meine-seite.de" />
+    </div>
+    <button class="btn-primary" onclick="saveSection('contact')">Speichern</button>
+  </div>
+</div>
+
+<!-- ══ MODAL: BIO ════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-bio">
+  <div class="modal">
+    <div class="modal-drag"></div>
+    <h2>Über mich</h2>
+    <div class="form-group">
+      <label>Beruf / Tätigkeit</label>
+      <input id="f-job" type="text" placeholder="Software-Entwickler" />
+    </div>
+    <div class="form-group">
+      <label>Biografie</label>
+      <textarea id="f-bio" placeholder="Erzähl etwas über dich…"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Interessen (kommagetrennt)</label>
+      <input id="f-interests" type="text" placeholder="Musik, Reisen, Fotografie" />
+    </div>
+    <button class="btn-primary" onclick="saveSection('bio')">Speichern</button>
+  </div>
+</div>
+
+<!-- ══ TOAST ════════════════════════════════════════ -->
+<div id="toast">✓ Gespeichert</div>
+
+<script>
+  /* ── STORAGE KEYS ─────────────────────────────── */
+  const KEY = 'myapp_profile';
+
+  /* ── LOAD DATA ────────────────────────────────── */
+  function loadData() {
+    try { return JSON.parse(localStorage.getItem(KEY)) || {}; }
+    catch { return {}; }
+  }
+
+  function saveData(data) {
+    localStorage.setItem(KEY, JSON.stringify(data));
+  }
+
+  /* ── RENDER PROFILE ───────────────────────────── */
+  function renderProfile() {
+    const d = loadData();
+
+    const firstname = d.firstname || '';
+    const lastname  = d.lastname  || '';
+    const fullname  = [firstname, lastname].filter(Boolean).join(' ');
+    const initials  = (firstname[0] || '') + (lastname[0] || '');
+
+    // Avatar
+    document.getElementById('avatarInitials').textContent = initials || '?';
+    document.getElementById('avatarName').textContent     = fullname || 'Dein Name';
+    document.getElementById('avatarJob').textContent      = d.job    || 'Keine Angabe';
+
+    // Format birthday
+    let birthDisplay = '—';
+    if (d.birth) {
+      const [y, m, day] = d.birth.split('-');
+      birthDisplay = `${day}.${m}.${y}`;
+    }
+
+    set('d-name',        fullname,      '—');
+    set('d-birth',       birthDisplay,  '—');
+    set('d-location',    d.location,    '—');
+    set('d-nationality', d.nationality, '—');
+    set('d-email',       d.email,       '—');
+    set('d-phone',       d.phone,       '—');
+    set('d-website',     d.website,     '—');
+    set('d-job',         d.job,         '—');
+    set('d-bio',         d.bio,         '—');
+    set('d-interests',   d.interests,   '—');
+  }
+
+  function set(id, val, fallback) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const v = val || fallback;
+    el.textContent = v;
+    el.classList.toggle('placeholder', !val);
+  }
+
+  /* ── MODAL LOGIC ──────────────────────────────── */
+  function openModal(section) {
+    const d = loadData();
+    const overlay = document.getElementById('modal-' + section);
+
+    if (section === 'personal') {
+      document.getElementById('f-firstname').value   = d.firstname   || '';
+      document.getElementById('f-lastname').value    = d.lastname    || '';
+      document.getElementById('f-birth').value       = d.birth       || '';
+      document.getElementById('f-location').value   = d.location    || '';
+      document.getElementById('f-nationality').value = d.nationality || '';
+    } else if (section === 'contact') {
+      document.getElementById('f-email').value   = d.email   || '';
+      document.getElementById('f-phone').value   = d.phone   || '';
+      document.getElementById('f-website').value = d.website || '';
+    } else if (section === 'bio') {
+      document.getElementById('f-job').value       = d.job       || '';
+      document.getElementById('f-bio').value       = d.bio       || '';
+      document.getElementById('f-interests').value = d.interests || '';
+    }
+
+    overlay.classList.add('open');
+  }
+
+  function closeAllModals() {
+    document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
+  }
+
+  /* ── SAVE SECTION ─────────────────────────────── */
+  function saveSection(section) {
+    const d = loadData();
+
+    if (section === 'personal') {
+      d.firstname   = document.getElementById('f-firstname').value.trim();
+      d.lastname    = document.getElementById('f-lastname').value.trim();
+      d.birth       = document.getElementById('f-birth').value;
+      d.location    = document.getElementById('f-location').value.trim();
+      d.nationality = document.getElementById('f-nationality').value.trim();
+    } else if (section === 'contact') {
+      d.email   = document.getElementById('f-email').value.trim();
+      d.phone   = document.getElementById('f-phone').value.trim();
+      d.website = document.getElementById('f-website').value.trim();
+    } else if (section === 'bio') {
+      d.job       = document.getElementById('f-job').value.trim();
+      d.bio       = document.getElementById('f-bio').value.trim();
+      d.interests = document.getElementById('f-interests').value.trim();
+    }
+
+    saveData(d);
+    renderProfile();
+    closeAllModals();
+    showToast('✓ Gespeichert');
+  }
+
+  /* ── TOAST ────────────────────────────────────── */
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  /* ── PAGE NAVIGATION ──────────────────────────── */
+  function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    document.getElementById('nav-'  + id).classList.add('active');
+  }
+
+  /* ── CLOSE MODAL ON OVERLAY CLICK ────────────── */
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) closeAllModals();
+    });
+  });
+
+  /* ── INIT ─────────────────────────────────────── */
+  renderProfile();
+</script>
+</body>
+</html>

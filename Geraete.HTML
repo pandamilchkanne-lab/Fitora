@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>Geräte – MyFit App</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0f0e0d;--surface:#1a1917;--surface2:#252320;
+      --border:#2e2c29;--accent:#e8a045;--acc2:#c97b25;
+      --text:#f0ece6;--muted:#8a8680;--r:14px;
+    }
+    html,body{height:100%;background:var(--bg);color:var(--text);
+      font-family:'DM Sans',sans-serif;font-size:15px;
+      -webkit-font-smoothing:antialiased;overflow:hidden}
+
+    /* ── LAYOUT ─────────────────────────────────── */
+    #app{height:100%;max-width:480px;margin:0 auto;display:flex;flex-direction:column;overflow:hidden}
+
+    /* ── TOP BAR ────────────────────────────────── */
+    .topbar{
+      padding:52px 22px 0;display:flex;align-items:flex-start;gap:14px;
+      background:linear-gradient(to bottom,var(--bg) 80%,transparent);
+      position:relative;z-index:10;flex-shrink:0;
+    }
+    .back-btn{
+      width:40px;height:40px;border-radius:12px;border:1.5px solid var(--border);
+      background:var(--surface);color:var(--muted);font-size:18px;
+      cursor:pointer;display:flex;align-items:center;justify-content:center;
+      flex-shrink:0;margin-top:2px;transition:border-color .2s,color .2s;
+    }
+    .back-btn:hover{border-color:var(--muted);color:var(--text)}
+    .topbar-text{flex:1}
+    .topbar-tag{font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+      color:var(--accent);font-family:'Syne',sans-serif;font-weight:600;margin-bottom:4px}
+    .topbar-title{font-family:'Syne',sans-serif;font-weight:800;font-size:26px;line-height:1.1}
+    .topbar-count{
+      background:rgba(232,160,69,.12);border:1px solid rgba(232,160,69,.3);
+      border-radius:20px;padding:5px 12px;font-family:'Syne',sans-serif;
+      font-size:12px;font-weight:700;color:var(--accent);white-space:nowrap;
+      margin-top:6px;flex-shrink:0;align-self:flex-start;
+    }
+
+    /* ── CAT TABS ───────────────────────────────── */
+    .cat-scroll{padding:16px 22px 0;display:flex;gap:7px;overflow-x:auto;flex-shrink:0;scrollbar-width:none}
+    .cat-scroll::-webkit-scrollbar{display:none}
+    .cat-btn{
+      flex-shrink:0;background:var(--surface);border:1.5px solid var(--border);
+      border-radius:20px;padding:7px 14px;font-family:'Syne',sans-serif;
+      font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;
+      transition:all .2s;white-space:nowrap;
+    }
+    .cat-btn.active{background:rgba(232,160,69,.12);border-color:var(--accent);color:var(--accent)}
+
+    /* ── SCROLL AREA ────────────────────────────── */
+    .scroll-area{flex:1;overflow-y:auto;padding:14px 22px 120px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+    .scroll-area::-webkit-scrollbar{width:3px}
+    .scroll-area::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+    /* ── SECTION ────────────────────────────────── */
+    .sec{margin-bottom:24px}
+    .sec-hd{
+      font-family:'Syne',sans-serif;font-size:11px;font-weight:700;
+      letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+      margin-bottom:10px;padding:0 2px;
+    }
+
+    /* ── EQUIPMENT GRID ─────────────────────────── */
+    .eq-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+    .eq-card{
+      background:var(--surface);border:2px solid var(--border);border-radius:14px;
+      padding:16px 14px;cursor:pointer;
+      display:flex;flex-direction:column;gap:8px;
+      transition:border-color .2s,background .2s,transform .12s;
+      user-select:none;position:relative;overflow:hidden;
+    }
+    .eq-card:active{transform:scale(.96)}
+    .eq-card.sel{border-color:var(--accent);background:rgba(232,160,69,.09)}
+    .eq-card.sel::after{
+      content:'✓';position:absolute;top:10px;right:10px;
+      width:22px;height:22px;border-radius:50%;
+      background:var(--accent);color:var(--bg);
+      font-size:12px;font-weight:700;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .eq-card.hidden{display:none}
+    .eq-ico{font-size:28px;line-height:1}
+    .eq-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;line-height:1.2}
+    .eq-desc{font-size:11px;color:var(--muted);line-height:1.4}
+
+    /* ── BOTTOM BAR ─────────────────────────────── */
+    .bottom-bar{
+      position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+      width:100%;max-width:480px;
+      background:rgba(15,14,13,.95);backdrop-filter:blur(20px);
+      border-top:1px solid var(--border);
+      padding:14px 22px 36px;
+      display:flex;flex-direction:column;gap:10px;
+      z-index:50;
+    }
+    .quick-actions{display:flex;gap:8px}
+    .btn-ghost{
+      flex:1;background:var(--surface);border:1.5px solid var(--border);
+      color:var(--muted);border-radius:11px;padding:11px;
+      font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;
+      transition:border-color .2s,color .2s;
+    }
+    .btn-ghost:hover{border-color:var(--muted);color:var(--text)}
+    .btn-save{
+      width:100%;background:var(--accent);color:var(--bg);border:none;
+      border-radius:12px;padding:15px;font-family:'Syne',sans-serif;
+      font-size:15px;font-weight:700;cursor:pointer;
+      transition:background .2s,transform .12s;
+    }
+    .btn-save:hover{background:#f0ae55}
+    .btn-save:active{transform:scale(.98)}
+
+    /* ── TOAST ──────────────────────────────────── */
+    #toast{
+      position:fixed;bottom:120px;left:50%;transform:translateX(-50%) translateY(16px);
+      background:#242220;border:1px solid var(--border);color:var(--text);
+      padding:9px 18px;border-radius:50px;font-size:13px;font-weight:500;
+      opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;z-index:200;
+      white-space:nowrap;
+    }
+    #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+    /* Animations */
+    @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    .sec{animation:fadeUp .4s ease both}
+    .sec:nth-child(2){animation-delay:.05s}.sec:nth-child(3){animation-delay:.1s}
+    .sec:nth-child(4){animation-delay:.15s}.sec:nth-child(5){animation-delay:.2s}
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <div class="topbar">
+    <button class="back-btn" onclick="history.back()">←</button>
+    <div class="topbar-text">
+      <div class="topbar-tag">Meine Ausrüstung</div>
+      <div class="topbar-title">Geräte</div>
+    </div>
+    <div class="topbar-count" id="sel-count">0 ausgewählt</div>
+  </div>
+
+  <div class="cat-scroll" id="cat-tabs">
+    <button class="cat-btn active" data-cat="Alle"         onclick="filterCat(this)">Alle</button>
+    <button class="cat-btn"        data-cat="Freie Gewichte" onclick="filterCat(this)">🏋️ Freie Gewichte</button>
+    <button class="cat-btn"        data-cat="Maschinen"    onclick="filterCat(this)">🤖 Maschinen</button>
+    <button class="cat-btn"        data-cat="Cardio"       onclick="filterCat(this)">🏃 Cardio</button>
+    <button class="cat-btn"        data-cat="Zubehör"      onclick="filterCat(this)">🪢 Zubehör</button>
+  </div>
+
+  <div class="scroll-area" id="eq-container">
+    <!-- built by JS -->
+  </div>
+
+  <div class="bottom-bar">
+    <div class="quick-actions">
+      <button class="btn-ghost" onclick="selectAll()">✓ Alle wählen</button>
+      <button class="btn-ghost" onclick="clearAll()">✕ Alle löschen</button>
+    </div>
+    <button class="btn-save" onclick="saveAndGoBack()">💾 Geräte speichern</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ════════════════════════════════════════════
+   EQUIPMENT DATABASE
+════════════════════════════════════════════ */
+const EQUIPMENT = [
+  // Freie Gewichte
+  {id:'dumbbells',      cat:'Freie Gewichte', ico:'🏋️', name:'Kurzhanteln',         desc:'Verstellbar oder als Set'},
+  {id:'barbell',        cat:'Freie Gewichte', ico:'⚙️', name:'Langhantel + Scheiben',desc:'Standard Olympia-Stange'},
+  {id:'ez_bar',         cat:'Freie Gewichte', ico:'↩️', name:'EZ-Stange',            desc:'Für Curls & Trizeps'},
+  {id:'kettlebell',     cat:'Freie Gewichte', ico:'🫙', name:'Kettlebell',           desc:'Ein oder mehrere Gewichte'},
+  {id:'weight_vest',    cat:'Freie Gewichte', ico:'🦺', name:'Gewichtsweste',        desc:'Zusatzgewicht für Bodyweight'},
+  {id:'trap_bar',       cat:'Freie Gewichte', ico:'🔷', name:'Trap-Bar / Hex-Bar',   desc:'Für Kreuzheben & Carries'},
+  {id:'sandbag',        cat:'Freie Gewichte', ico:'🪨', name:'Sandsack',             desc:'Funktionales Training'},
+
+  // Maschinen
+  {id:'cable_tower',    cat:'Maschinen', ico:'⚡', name:'Kabelturm',              desc:'Einzel- oder Doppelstation'},
+  {id:'lat_machine',    cat:'Maschinen', ico:'↙️', name:'Latzugmaschine',         desc:'Für Rücken & Bizeps'},
+  {id:'leg_press_m',    cat:'Maschinen', ico:'🦵', name:'Beinpresse',             desc:'45° oder sitzend'},
+  {id:'smith_machine',  cat:'Maschinen', ico:'🔧', name:'Smith Machine',          desc:'Geführte Langhantel'},
+  {id:'chest_press_m',  cat:'Maschinen', ico:'💪', name:'Chest Press Maschine',   desc:'Brust isoliert drücken'},
+  {id:'butterfly',      cat:'Maschinen', ico:'🦋', name:'Butterfly / Pec Deck',   desc:'Brustfliegende Maschine'},
+  {id:'rowing_m',       cat:'Maschinen', ico:'🚣', name:'Rudermaschine',          desc:'Sitzrudern oder Kabel'},
+  {id:'leg_ext_m',      cat:'Maschinen', ico:'📐', name:'Beinstrecker',           desc:'Quadrizeps Isolation'},
+  {id:'leg_curl_m',     cat:'Maschinen', ico:'🔄', name:'Leg Curl Maschine',      desc:'Ischio Isolation'},
+  {id:'hack_squat_m',   cat:'Maschinen', ico:'🏗️', name:'Hackenschmidt',          desc:'Geführte Kniebeuge'},
+  {id:'shoulder_press_m',cat:'Maschinen',ico:'⬆️', name:'Schulterdrückmaschine', desc:'OHP isoliert & geführt'},
+  {id:'calf_raise_m',   cat:'Maschinen', ico:'👣', name:'Wadenmaschine',          desc:'Stehend oder sitzend'},
+  {id:'cable_crossover',cat:'Maschinen', ico:'✕', name:'Kabel-Crossover',         desc:'Brust von allen Winkeln'},
+
+  // Cardio
+  {id:'treadmill',      cat:'Cardio', ico:'🏃', name:'Laufband',                desc:'Drinnen laufen & gehen'},
+  {id:'bike',           cat:'Cardio', ico:'🚴', name:'Ergometer / Fahrrad',     desc:'Stationäres Fahrrad'},
+  {id:'rowing_erg',     cat:'Cardio', ico:'🛶', name:'Rudergerät',              desc:'Ganzkörper Cardio'},
+  {id:'elliptical',     cat:'Cardio', ico:'🌀', name:'Ellipsentrainer',         desc:'Gelenkschonendes Cardio'},
+  {id:'assault_bike',   cat:'Cardio', ico:'💨', name:'Assault Bike',            desc:'Hochintensives Radfahren'},
+  {id:'jump_rope',      cat:'Cardio', ico:'🪢', name:'Springseil',              desc:'Schnell & effektiv'},
+  {id:'stair_climber',  cat:'Cardio', ico:'🪜', name:'Stairmaster',             desc:'Treppen-Cardio'},
+
+  // Zubehör
+  {id:'pullup_bar',     cat:'Zubehör', ico:'⬆️', name:'Klimmzugstange',        desc:'Freistehend oder an Tür'},
+  {id:'dip_bar',        cat:'Zubehör', ico:'⬇️', name:'Dip-Stange / Parallels', desc:'Für Trizeps & Brust Dips'},
+  {id:'squat_rack',     cat:'Zubehör', ico:'🏗️', name:'Squat Rack / Power Rack',desc:'Sicherheit bei schweren Lifts'},
+  {id:'flat_bench',     cat:'Zubehör', ico:'🪑', name:'Flachbank',             desc:'Für Bankdrücken & mehr'},
+  {id:'adj_bench',      cat:'Zubehör', ico:'📐', name:'Verstellbare Schrägbank',desc:'Verschiedene Winkel möglich'},
+  {id:'resistance_bands',cat:'Zubehör',ico:'🔴', name:'Widerstandsbänder',      desc:'Leicht, vielseitig, günstig'},
+  {id:'trx',            cat:'Zubehör', ico:'🪢', name:'TRX / Schlingentrainer', desc:'Bodyweight Funktionaltraining'},
+  {id:'mat',            cat:'Zubehör', ico:'🧘', name:'Gymnastikmatte',         desc:'Für Core & Dehnübungen'},
+  {id:'foam_roller',    cat:'Zubehör', ico:'🪵', name:'Foam Roller',            desc:'Massage & Mobilität'},
+  {id:'ab_wheel',       cat:'Zubehör', ico:'⭕', name:'Ab Wheel / Ab Roller',   desc:'Core Isolationsgerät'},
+];
+
+/* ════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════ */
+const EQ_KEY = 'myapp_equipment';
+let selected = new Set(JSON.parse(localStorage.getItem(EQ_KEY) || '[]'));
+let currentCat = 'Alle';
+
+/* ════════════════════════════════════════════
+   BUILD UI
+════════════════════════════════════════════ */
+function build(){
+  const container = document.getElementById('eq-container');
+  const cats = [...new Set(EQUIPMENT.map(e => e.cat))];
+
+  container.innerHTML = cats.map(cat => {
+    const items = EQUIPMENT.filter(e => e.cat === cat);
+    return `<div class="sec" data-sec="${cat}">
+      <div class="sec-hd">${catIcon(cat)} ${cat}</div>
+      <div class="eq-grid">
+        ${items.map(eq => `
+          <div class="eq-card ${selected.has(eq.id)?'sel':''}" data-id="${eq.id}" data-cat="${eq.cat}" onclick="toggleEq('${eq.id}')">
+            <div class="eq-ico">${eq.ico}</div>
+            <div class="eq-name">${eq.name}</div>
+            <div class="eq-desc">${eq.desc}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+
+  updateCount();
+}
+
+function catIcon(cat){
+  const icons = {'Freie Gewichte':'🏋️','Maschinen':'🤖','Cardio':'🏃','Zubehör':'🪢'};
+  return icons[cat]||'📦';
+}
+
+/* ════════════════════════════════════════════
+   INTERACTIONS
+════════════════════════════════════════════ */
+function toggleEq(id){
+  if(selected.has(id)) selected.delete(id);
+  else selected.add(id);
+  const card = document.querySelector(`.eq-card[data-id="${id}"]`);
+  if(card) card.classList.toggle('sel', selected.has(id));
+  updateCount();
+}
+
+function updateCount(){
+  const n = selected.size;
+  document.getElementById('sel-count').textContent = `${n} ausgewählt`;
+}
+
+function filterCat(btn){
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  currentCat = btn.dataset.cat;
+  document.querySelectorAll('.sec').forEach(sec=>{
+    sec.style.display = (currentCat==='Alle' || sec.dataset.sec===currentCat) ? '' : 'none';
+  });
+}
+
+function selectAll(){
+  EQUIPMENT.forEach(eq=>{
+    if(currentCat==='Alle'||eq.cat===currentCat) selected.add(eq.id);
+  });
+  document.querySelectorAll('.eq-card').forEach(c=>{
+    if(currentCat==='Alle'||c.dataset.cat===currentCat) c.classList.add('sel');
+  });
+  updateCount();
+}
+
+function clearAll(){
+  EQUIPMENT.forEach(eq=>{
+    if(currentCat==='Alle'||eq.cat===currentCat) selected.delete(eq.id);
+  });
+  document.querySelectorAll('.eq-card').forEach(c=>{
+    if(currentCat==='Alle'||c.dataset.cat===currentCat) c.classList.remove('sel');
+  });
+  updateCount();
+}
+
+function saveAndGoBack(){
+  localStorage.setItem(EQ_KEY, JSON.stringify([...selected]));
+  showToast(`✓ ${selected.size} Geräte gespeichert`);
+  setTimeout(()=> window.location.href = 'Main.html', 1200);
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+/* ════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════ */
+build();
+</script>
+</body>
+</html>

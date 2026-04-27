@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>My App</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0f0e0d;--surface:#1a1917;--border:#2e2c29;
+      --accent:#e8a045;--acc2:#c97b25;--text:#f0ece6;--muted:#8a8680;
+    }
+    html,body{height:100%;background:var(--bg);color:var(--text);
+      font-family:'DM Sans',sans-serif;overflow:hidden;
+      -webkit-font-smoothing:antialiased}
+
+    /* ── BACKGROUND MESH ───────────────────────── */
+    .mesh{
+      position:fixed;inset:0;pointer-events:none;
+      background:
+        radial-gradient(ellipse 60% 50% at 70% 10%, rgba(232,160,69,.13) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 40% at 20% 80%, rgba(232,160,69,.07) 0%, transparent 60%);
+    }
+    /* Animated noise grain */
+    .grain{
+      position:fixed;inset:-50%;width:200%;height:200%;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity:.025;animation:grain 8s steps(10) infinite;
+      pointer-events:none;
+    }
+    @keyframes grain{
+      0%,100%{transform:translate(0,0)}10%{transform:translate(-2%,-3%)}
+      20%{transform:translate(3%,2%)}30%{transform:translate(-1%,4%)}
+      40%{transform:translate(4%,-1%)}50%{transform:translate(-3%,3%)}
+      60%{transform:translate(2%,-4%)}70%{transform:translate(-4%,1%)}
+      80%{transform:translate(3%,3%)}90%{transform:translate(-2%,-2%)}
+    }
+
+    /* ── WRAPPER ───────────────────────────────── */
+    #wrap{
+      position:relative;z-index:1;
+      height:100%;max-width:480px;margin:0 auto;
+      display:flex;flex-direction:column;
+      align-items:center;justify-content:center;
+      padding:0 40px;
+    }
+
+    /* ── LOGO RING ─────────────────────────────── */
+    .logo-wrap{
+      position:relative;margin-bottom:48px;
+      animation:logoIn .9s cubic-bezier(.34,1.56,.64,1) both .2s;
+    }
+    @keyframes logoIn{
+      from{opacity:0;transform:scale(.5) rotate(-15deg)}
+      to  {opacity:1;transform:scale(1) rotate(0)}
+    }
+    .logo-ring{
+      width:100px;height:100px;border-radius:28px;
+      background:linear-gradient(135deg,var(--acc2),var(--accent) 60%,#f5c06a);
+      display:flex;align-items:center;justify-content:center;
+      font-size:48px;
+      box-shadow:
+        0 0 0 1px rgba(232,160,69,.4),
+        0 0 40px rgba(232,160,69,.25),
+        0 20px 60px rgba(0,0,0,.5);
+      position:relative;overflow:hidden;
+    }
+    /* Shine sweep */
+    .logo-ring::after{
+      content:'';position:absolute;inset:0;
+      background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.18) 50%,transparent 60%);
+      animation:shine 3s ease-in-out infinite 1.5s;
+    }
+    @keyframes shine{
+      0%  {transform:translateX(-100%)}
+      30%,100%{transform:translateX(200%)}
+    }
+    /* Pulsing glow ring */
+    .logo-ring::before{
+      content:'';position:absolute;inset:-3px;border-radius:31px;
+      background:linear-gradient(135deg,var(--acc2),var(--accent));
+      z-index:-1;filter:blur(12px);opacity:.6;
+      animation:glowPulse 2s ease-in-out infinite;
+    }
+    @keyframes glowPulse{
+      0%,100%{opacity:.4;transform:scale(1)}
+      50%    {opacity:.8;transform:scale(1.05)}
+    }
+
+    /* ── TEXT ──────────────────────────────────── */
+    .app-name{
+      font-family:'Syne',sans-serif;font-size:32px;font-weight:800;
+      letter-spacing:-.02em;text-align:center;
+      animation:textIn .7s ease both .5s;opacity:0;
+    }
+    .app-tagline{
+      font-size:14px;color:var(--muted);text-align:center;
+      margin-top:8px;margin-bottom:56px;
+      animation:textIn .7s ease both .65s;opacity:0;
+      font-weight:300;letter-spacing:.02em;
+    }
+    @keyframes textIn{
+      from{opacity:0;transform:translateY(12px)}
+      to  {opacity:1;transform:translateY(0)}
+    }
+
+    /* ── LOADING AREA ──────────────────────────── */
+    .loader-wrap{
+      width:100%;
+      animation:textIn .7s ease both .8s;opacity:0;
+    }
+
+    /* Phase text */
+    .phase-text{
+      display:flex;justify-content:space-between;align-items:center;
+      margin-bottom:10px;
+    }
+    .phase-label{font-size:12px;color:var(--muted);font-weight:400;letter-spacing:.03em;transition:opacity .4s}
+    .phase-pct{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--accent)}
+
+    /* Track */
+    .bar-track{
+      width:100%;height:5px;background:var(--surface);border-radius:3px;
+      position:relative;overflow:hidden;
+      box-shadow:inset 0 1px 3px rgba(0,0,0,.5);
+    }
+    /* Fill */
+    .bar-fill{
+      position:absolute;left:0;top:0;height:100%;
+      background:linear-gradient(90deg,var(--acc2),var(--accent) 60%,#f5c06a);
+      border-radius:3px;width:0%;
+      transition:width .6s cubic-bezier(.22,.68,0,1.1);
+    }
+    /* Shimmer overlay */
+    .bar-fill::after{
+      content:'';position:absolute;inset:0;
+      background:linear-gradient(90deg,transparent,rgba(255,255,255,.35) 50%,transparent);
+      animation:shimmer 1.4s ease-in-out infinite;
+    }
+    @keyframes shimmer{
+      0%  {transform:translateX(-100%)}
+      100%{transform:translateX(300%)}
+    }
+    /* Glow edge */
+    .bar-fill::before{
+      content:'';position:absolute;right:-4px;top:-3px;
+      width:8px;height:11px;
+      background:rgba(255,200,100,.9);
+      filter:blur(6px);border-radius:50%;
+    }
+
+    /* Dots */
+    .dots{
+      display:flex;justify-content:center;gap:6px;margin-top:28px;
+    }
+    .dot{
+      width:5px;height:5px;border-radius:50%;background:var(--border);
+      animation:dotPop 1.2s ease-in-out infinite;
+    }
+    .dot:nth-child(2){animation-delay:.2s}
+    .dot:nth-child(3){animation-delay:.4s}
+    @keyframes dotPop{
+      0%,80%,100%{background:var(--border);transform:scale(1)}
+      40%        {background:var(--accent);transform:scale(1.4)}
+    }
+
+    /* ── EXIT ANIMATION ────────────────────────── */
+    #wrap.fade-out{
+      animation:fadeOut .5s ease forwards;
+    }
+    @keyframes fadeOut{
+      to{opacity:0;transform:scale(1.04)}
+    }
+  </style>
+</head>
+<body>
+<div class="mesh"></div>
+<div class="grain"></div>
+
+<div id="wrap">
+  <div class="logo-wrap">
+    <div class="logo-ring">🏋️</div>
+  </div>
+
+  <div class="app-name">MyFit App</div>
+  <div class="app-tagline">Dein persönlicher Trainingsbegleiter</div>
+
+  <div class="loader-wrap">
+    <div class="phase-text">
+      <span class="phase-label" id="phase-label">Initialisiere…</span>
+      <span class="phase-pct"  id="phase-pct">0%</span>
+    </div>
+    <div class="bar-track">
+      <div class="bar-fill" id="bar-fill"></div>
+    </div>
+    <div class="dots">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const PHASES = [
+    { pct: 12,  label: 'Initialisiere App…' },
+    { pct: 28,  label: 'Lade Benutzerdaten…' },
+    { pct: 52,  label: 'Synchronisiere Profil…' },
+    { pct: 71,  label: 'Bereite Trainingsdaten vor…' },
+    { pct: 88,  label: 'Lade Personal Records…' },
+    { pct: 97,  label: 'Fast fertig…' },
+    { pct: 100, label: 'Los geht\'s! 🚀' },
+  ];
+
+  const fill  = document.getElementById('bar-fill');
+  const label = document.getElementById('phase-label');
+  const pct   = document.getElementById('phase-pct');
+  const wrap  = document.getElementById('wrap');
+
+  let i = 0;
+  const DELAYS = [300, 420, 500, 480, 400, 350, 280];
+
+  function step() {
+    if (i >= PHASES.length) { redirect(); return; }
+    const p = PHASES[i];
+    fill.style.width  = p.pct + '%';
+    label.textContent = p.label;
+    pct.textContent   = p.pct + '%';
+    i++;
+    setTimeout(step, DELAYS[i - 1] ?? 350);
+  }
+
+  function redirect() {
+    setTimeout(() => {
+      wrap.classList.add('fade-out');
+      setTimeout(() => {
+        const done = localStorage.getItem('myapp_tutorial_done');
+        window.location.href = done ? 'Main.html' : 'Tutorial.html';
+      }, 500);
+    }, 400);
+  }
+
+  // Start after initial animations settle
+  setTimeout(step, 900);
+</script>
+</body>
+</html>
